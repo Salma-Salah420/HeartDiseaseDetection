@@ -1,35 +1,29 @@
 from flask import Flask, request, jsonify
-import pandas as pd
 import mlflow.pyfunc
+import pandas as pd
+from flask_cors import CORS
 
-# 🔹 حمّل الموديل من مجلد MLflow artifacts
-MODEL_PATH = "mlruns/194489145900410023/models/m-9cd419fc238646248d7d87bf154a7713/artifacts"
-model = mlflow.pyfunc.load_model(MODEL_PATH)
-
-# 🔹 أنشئ تطبيق Flask
+# Initialize app
 app = Flask(__name__)
+CORS(app)
 
-@app.route("/")
+# Load the model from MLflow directory
+model = mlflow.pyfunc.load_model("model")
+
+@app.route("/", methods=["GET"])
 def home():
-    return jsonify({"message": "✅ Heart Disease MLflow model is running!"})
+    return jsonify({"message": "✅ MLflow model serving is running."})
 
 @app.route("/invocations", methods=["POST"])
 def predict():
     try:
-        # استقبل البيانات بنفس تنسيق MLflow serve
         data = request.get_json()
-
         if "dataframe_split" not in data:
-            return jsonify({"error": "Invalid JSON format. Expected 'dataframe_split' key."}), 400
+            return jsonify({"error": "Invalid input format. Expected 'dataframe_split'."}), 400
 
-        df = pd.DataFrame(data["dataframe_split"]["data"],
-                          columns=data["dataframe_split"]["columns"])
-
-        # 🔹 تنبؤ بالموديل
-        predictions = model.predict(df)
-
-        # 🔹 أعد النتائج
-        return jsonify({"predictions": predictions.tolist()})
+        df = pd.DataFrame(**data["dataframe_split"])
+        preds = model.predict(df)
+        return jsonify({"predictions": preds.tolist()})
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
