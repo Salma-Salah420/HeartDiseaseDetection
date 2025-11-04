@@ -1,26 +1,15 @@
 from flask import Flask, request, jsonify
 import joblib
-import numpy as np
 import pandas as pd
 import os
 
 app = Flask(__name__)
 
-# تحميل الموديل
-model_path = os.path.join("model", "model.pkl")
-model = joblib.load(model_path)
+# ✅ تحميل الموديل من المجلد الصحيح
+MODEL_PATH = os.path.join(os.path.dirname(__file__), "model", "model.pkl")
+model = joblib.load(MODEL_PATH)
 
-# قائمة الأعمدة المطلوبة (يجب أن تتطابق تمامًا مع التدريب)
-FEATURE_COLUMNS = [
-    'Unnamed: 0', 'BMI', 'Smoking', 'AlcoholDrinking', 'Stroke',
-    'PhysicalHealth', 'MentalHealth', 'DiffWalking', 'Sex', 'AgeCategory',
-    'PhysicalActivity', 'GenHealth', 'SleepTime', 'Asthma', 'KidneyDisease',
-    'SkinCancer', 'Race_Asian', 'Race_Black', 'Race_Hispanic', 'Race_Other',
-    'Race_White', 'Diabetic_No, borderline diabetes', 'Diabetic_Yes',
-    'Diabetic_Yes (during pregnancy)'
-]
-
-@app.route("/", methods=["GET"])
+@app.route("/")
 def home():
     return jsonify({
         "message": "✅ MLflow Heart Disease Prediction API is running successfully!",
@@ -32,31 +21,39 @@ def predict():
     try:
         data = request.get_json()
 
-        # التأكد من وجود القيم المطلوبة
-        missing = [f for f in FEATURE_COLUMNS if f not in data and f != 'Unnamed: 0']
-        if missing:
-            return jsonify({
-                "error": f"Missing features: {missing}"
-            }), 400
+        # ✅ تحويل البيانات إلى DataFrame
+        df = pd.DataFrame([data])
 
-        # إنشاء DataFrame بصف واحد من القيم
-        df = pd.DataFrame([data], columns=[f for f in FEATURE_COLUMNS if f != 'Unnamed: 0'])
+        # ✅ إضافة العمود المفقود Unnamed: 0 إذا لم يكن موجودًا
+        if "Unnamed: 0" not in df.columns:
+            df["Unnamed: 0"] = 0
 
-        # ملء أي قيم NaN بـ 0
-        df = df.fillna(0)
+        # ✅ ترتيب الأعمدة لتطابق التدريب
+        expected_features = [
+            'Unnamed: 0', 'BMI', 'Smoking', 'AlcoholDrinking', 'Stroke',
+            'PhysicalHealth', 'MentalHealth', 'DiffWalking', 'Sex',
+            'AgeCategory', 'PhysicalActivity', 'GenHealth', 'SleepTime',
+            'Asthma', 'KidneyDisease', 'SkinCancer', 'Race_Asian',
+            'Race_Black', 'Race_Hispanic', 'Race_Other', 'Race_White',
+            'Diabetic_No, borderline diabetes', 'Diabetic_Yes',
+            'Diabetic_Yes (during pregnancy)'
+        ]
 
-        # التنبؤ
+        # ✅ ملء القيم المفقودة بـ 0 لتجنب NaN errors
+        df = df.reindex(columns=expected_features, fill_value=0)
+
+        # ✅ التنبؤ
         prediction = model.predict(df)[0]
-        proba = model.predict_proba(df)[0][1]
 
         return jsonify({
             "prediction": int(prediction),
-            "probability": float(proba)
+            "message": "✅ Prediction successful!"
         })
 
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        return jsonify({"error": str(e)}), 400
 
 
 if __name__ == "__main__":
+    # ✅ عند التشغيل المحلي
     app.run(host="0.0.0.0", port=5000)
