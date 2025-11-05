@@ -1,0 +1,19 @@
+name: heart-disease-prediction-grad-proj-depi
+channels:
+  - defaults
+dependencies:
+  - python=3.11.9
+  - pip<=25.2
+  - pip:
+      - mlflow==3.5.1
+      - numpy==2.3.4
+      - pandas==2.3.3
+      - psutil==5.9.0
+      - scikit-learn==1.7.2
+      - scipy==1.16.3
+      - sklearn-features==0.0.2
+      - imblearn
+      - seaborn
+      - xgboost
+      - pyarrow==21.0.0
+      - cloudpickle==3.1.2

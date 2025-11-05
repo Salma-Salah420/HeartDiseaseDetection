@@ -1,0 +1,15 @@
+creation_timestamp: 1762168370113
+current_stage: None
+deployment_job_state: null
+description: ''
+last_updated_timestamp: 1762168370113
+model_id: m-d1aa35ddb81c4ca5afad7c1ce22ed977
+name: best_model_gradian
+run_id: 6251f483ea534cc3b8ae74d8a77d11db
+run_link: ''
+source: file:///E:/courses/ai_depi_round_3/technical/project/final_project/ml_ops/mlruns/194489145900410023/models/m-d1aa35ddb81c4ca5afad7c1ce22ed977/artifacts
+status: READY
+status_message: null
+storage_location: file:///E:/courses/ai_depi_round_3/technical/project/final_project/ml_ops/mlruns/194489145900410023/models/m-d1aa35ddb81c4ca5afad7c1ce22ed977/artifacts
+user_id: null
+version: 2

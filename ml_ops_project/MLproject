@@ -1,0 +1,13 @@
+name: heart-disease-project
+
+conda_env: conda.yaml
+
+entry_points:
+  gradient-boosting:
+    parameters:
+      data_path: {type: str, default: "ML.csv"}
+      target_col: {type: str, default: "HeartDisease"}
+    command: >
+      python gradientBoost_Classifier_mlflow.py
+      --data_path {data_path}
+      --target_col {target_col}

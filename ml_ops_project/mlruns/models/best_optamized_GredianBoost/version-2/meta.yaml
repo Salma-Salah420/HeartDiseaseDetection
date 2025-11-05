@@ -1,0 +1,15 @@
+creation_timestamp: 1762166798035
+current_stage: Deleted_Internal
+deployment_job_state: null
+description: ''
+last_updated_timestamp: 1762166978061
+model_id: m-e281eb726332411eb29be6bcef99a432
+name: best_optamized_GredianBoost
+run_id: 4362b79a8cba4be1b21f9ca093525b3a
+run_link: ''
+source: file:///E:/courses/ai_depi_round_3/technical/project/final_project/ml_ops/mlruns/194489145900410023/models/m-e281eb726332411eb29be6bcef99a432/artifacts
+status: READY
+status_message: null
+storage_location: file:///E:/courses/ai_depi_round_3/technical/project/final_project/ml_ops/mlruns/194489145900410023/models/m-e281eb726332411eb29be6bcef99a432/artifacts
+user_id: null
+version: 2

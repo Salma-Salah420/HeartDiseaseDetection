@@ -1,0 +1,11 @@
+artifact_location: file:///E:/courses/ai_depi_round_3/technical/project/final_project/ml_ops/mlruns/194489145900410023/models/m-9303052e77294679846da8aab8b228e2/artifacts
+creation_timestamp: 1762163055835
+experiment_id: '194489145900410023'
+last_updated_timestamp: 1762163065785
+lifecycle_stage: deleted
+model_id: m-9303052e77294679846da8aab8b228e2
+model_type: null
+name: GradientBoostingModel
+source_run_id: 4f6c7ad72f1249689d9835a0dc6f8520
+status: 2
+status_message: null

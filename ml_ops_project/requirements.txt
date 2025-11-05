@@ -1,0 +1,10 @@
+flask
+pandas
+numpy==2.3.4
+mlflow==3.5.1
+pyarrow==21.0.0
+scikit-learn==1.7.2
+xgboost
+imblearn
+matplotlib
+seaborn

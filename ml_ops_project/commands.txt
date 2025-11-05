@@ -1,0 +1,13 @@
+conda create -n mlflow python=3.11.9
+conda activate mlflow
+pip install mlflow                        
+mlflow ui
+
+
+pip install mlflow scikit-learn pandas seaborn matplotlib numpy
+pip install mlflow scikit-learn pandas seaborn matplotlib numpy xgboost imbalanced-learn
+
+
+mlflow
+
+mlflow run . -e gradient-boosting --experiment-name heart-disease-predict
