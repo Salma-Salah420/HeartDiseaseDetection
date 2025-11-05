@@ -1,9 +1,11 @@
 from flask import Flask, request, jsonify
+from flask_cors import CORS
 import joblib
 import pandas as pd
 import os
 
 app = Flask(__name__)
+CORS(app)  # ✅ السماح بالاتصال من أي موقع (Vercel مثلاً)
 
 # ✅ تحميل الموديل من المجلد الصحيح
 MODEL_PATH = os.path.join(os.path.dirname(__file__), "model", "model.pkl")
