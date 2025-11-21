@@ -1,5 +1,5 @@
 # ================================================================
-# 🌟 Gradient Boosting Classifier - MLflow Integration (Final)
+# 🚀 MLflow Version for Your New Gradient Boosting Model
 # ================================================================
 
 import os
@@ -11,148 +11,141 @@ import mlflow
 import mlflow.sklearn
 
 from sklearn.ensemble import GradientBoostingClassifier
-from sklearn.model_selection import train_test_split
+from sklearn.model_selection import StratifiedKFold, cross_validate
 from sklearn.metrics import (
-    accuracy_score, f1_score, confusion_matrix, roc_curve, auc, classification_report
+    accuracy_score, precision_score, recall_score, f1_score,
+    roc_auc_score, confusion_matrix, roc_curve, auc, classification_report
 )
 
+from joblib import parallel_backend
 import warnings
 warnings.filterwarnings("ignore")
 
 # ================================================================
-# 1️⃣ Load Dataset (Directly from ML.csv)
+# 1️⃣ Load Processed Data
 # ================================================================
 
-DATA_PATH = "ML.csv"
-TARGET_COL = "HeartDisease"  # change this if your target column has another name
+X_train = pd.read_csv("X_train_final.csv")
+y_train = pd.read_csv("y_train_final.csv")
 
-df = pd.read_csv(DATA_PATH)
-print(f"✅ Dataset loaded successfully: {df.shape[0]} rows, {df.shape[1]} columns")
+X_test = pd.read_csv("X_test_final.csv")
+y_test = pd.read_csv("y_test_final.csv")
 
-# Split features and target
-X = df.drop(columns=[TARGET_COL])
-y = df[TARGET_COL]
-
-# Train/test split
-X_train, X_test, y_train, y_test = train_test_split(
-    X, y, test_size=0.2, random_state=42, stratify=y
-)
-
-print(f"Train shape: {X_train.shape}, Test shape: {X_test.shape}")
+print("Train:", X_train.shape, "| Test:", X_test.shape)
 
 # ================================================================
-# 2️⃣ Setup and Train Gradient Boosting Model
+# 2️⃣ Model + Cross Validation
+# ================================================================
+
+gb = GradientBoostingClassifier(random_state=42)
+
+cv = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
+scoring = ['accuracy', 'precision', 'recall', 'f1', 'roc_auc']
+
+with parallel_backend('threading'):
+    cv_res = cross_validate(gb, X_train, y_train, cv=cv, scoring=scoring, n_jobs=-1)
+
+# ================================================================
+# 3️⃣ Start MLflow Run
 # ================================================================
 
 mlflow.set_experiment("heart-disease-predict")
 
 with mlflow.start_run() as run:
-    mlflow.set_tag("model", "GradientBoostingClassifier")
 
-    # Default model
-    clf = GradientBoostingClassifier(
-        n_estimators=100,
-        learning_rate=0.1,
-        max_depth=3,
-        subsample=1.0,
-        min_samples_leaf=1,
-        random_state=42
-    )
+    mlflow.set_tag("model", "GradientBoostingClassifier-new-version")
 
-    # Train model
-    clf.fit(X_train, y_train)
-    y_pred = clf.predict(X_test)
-    y_proba = clf.predict_proba(X_test)[:, 1] if hasattr(clf, "predict_proba") else None
+    # Log CV Metrics
+    for metric in scoring:
+        key = "test_" + metric
+        mlflow.log_metric("cv_" + metric, float(np.mean(cv_res[key])))
 
-    # ================================================================
-    # 3️⃣ Evaluation Metrics
-    # ================================================================
+    # ============================================================
+    # Train Final Model
+    # ============================================================
+    gb.fit(X_train, y_train)
+
+    y_pred = gb.predict(X_test)
+    try:
+        y_proba = gb.predict_proba(X_test)[:, 1]
+    except:
+        y_proba = None
+
+    # ============================================================
+    # Final Metrics
+    # ============================================================
+
     acc = accuracy_score(y_test, y_pred)
+    prec = precision_score(y_test, y_pred)
+    rec = recall_score(y_test, y_pred)
     f1 = f1_score(y_test, y_pred)
-    cls_report = classification_report(y_test, y_pred, digits=4)
-
-    mlflow.log_params({
-        "n_estimators": 100,
-        "learning_rate": 0.1,
-        "max_depth": 3,
-        "subsample": 1.0,
-        "min_samples_leaf": 1
-    })
 
     mlflow.log_metrics({
         "accuracy": acc,
-        "f1_score": f1
+        "precision": prec,
+        "recall": rec,
+        "f1": f1
     })
 
-    print(f"✅ Accuracy: {acc:.4f}")
-    print(f"✅ F1 Score: {f1:.4f}")
-    print("\nClassification Report:\n", cls_report)
+    if y_proba is not None:
+        rocauc = roc_auc_score(y_test, y_proba)
+        mlflow.log_metric("roc_auc", rocauc)
 
-    # ================================================================
-    # 4️⃣ Log Model to MLflow
-    # ================================================================
-    mlflow.sklearn.log_model(clf, artifact_path="GradientBoostingModel")
+    # ============================================================
+    # Save Model to MLflow
+    # ============================================================
+    mlflow.sklearn.log_model(gb, artifact_path="GradientBoostingModel")
 
-    # ================================================================
-    # 5️⃣ Confusion Matrix
-    # ================================================================
+    # ============================================================
+    # Confusion Matrix
+    # ============================================================
     cm = confusion_matrix(y_test, y_pred)
     plt.figure(figsize=(6, 5))
-    sns.heatmap(cm, annot=True, fmt='d', cmap='Blues', cbar=False)
-    plt.title("Confusion Matrix - Gradient Boosting (Heart Disease)")
-    plt.xlabel("Predicted")
-    plt.ylabel("Actual")
+    sns.heatmap(cm, annot=True, fmt='d', cmap="Blues")
+    plt.title("Confusion Matrix - New Gradient Boosting")
     mlflow.log_figure(plt.gcf(), "confusion_matrix.png")
-    plt.show()
     plt.close()
 
-    # ================================================================
-    # 6️⃣ ROC Curve
-    # ================================================================
+    # ============================================================
+    # ROC Curve
+    # ============================================================
     if y_proba is not None:
         fpr, tpr, _ = roc_curve(y_test, y_proba)
-        roc_auc = auc(fpr, tpr)
+        roc_auc_val = auc(fpr, tpr)
 
         plt.figure(figsize=(6, 5))
-        plt.plot(fpr, tpr, color="darkorange", lw=2, label=f"AUC = {roc_auc:.4f}")
-        plt.plot([0, 1], [0, 1], color="navy", lw=1, linestyle="--")
-        plt.xlabel("False Positive Rate")
-        plt.ylabel("True Positive Rate")
-        plt.title("ROC Curve - Gradient Boosting (Heart Disease)")
-        plt.legend(loc="lower right")
+        plt.plot(fpr, tpr, lw=2, label=f"AUC = {roc_auc_val:.4f}")
+        plt.plot([0,1], [0,1], linestyle='--')
+        plt.legend()
+        plt.title("ROC Curve - New Gradient Boosting")
         mlflow.log_figure(plt.gcf(), "roc_curve.png")
-        plt.show()
         plt.close()
 
-        mlflow.log_metric("roc_auc", roc_auc)
+    # ============================================================
+    # Feature Importances
+    # ============================================================
+    feat_imp = pd.Series(gb.feature_importances_, index=X_train.columns).sort_values(ascending=False)
 
-    # ================================================================
-    # 7️⃣ Feature Importances
-    # ================================================================
-    try:
-        feat_imps = pd.Series(clf.feature_importances_, index=X.columns).sort_values(ascending=False)
-        plt.figure(figsize=(10, 6))
-        feat_imps.head(20).plot(kind="bar")
-        plt.title("Top 20 Feature Importances - Gradient Boosting (Heart Disease)")
-        plt.tight_layout()
-        mlflow.log_figure(plt.gcf(), "feature_importances.png")
-        plt.show()
-        plt.close()
+    plt.figure(figsize=(10, 6))
+    feat_imp.head(20).plot(kind="bar")
+    plt.title("Top Features - New Gradient Boosting")
+    plt.tight_layout()
+    mlflow.log_figure(plt.gcf(), "feature_importances.png")
+    plt.close()
 
-        feat_imps.to_csv("feature_importances.csv", header=True)
-        mlflow.log_artifact("feature_importances.csv")
-        os.remove("feature_importances.csv")
-    except Exception:
-        pass
+    feat_imp.to_csv("feature_importances.csv")
+    mlflow.log_artifact("feature_importances.csv")
+    os.remove("feature_importances.csv")
 
-    # ================================================================
-    # 8️⃣ Classification Report (as text file)
-    # ================================================================
-    with open("classification_report.txt", "w", encoding="utf-8") as f:
-        f.write("Accuracy: {:.6f}\n".format(acc))
-        f.write("F1-score: {:.6f}\n\n".format(f1))
-        f.write("Classification Report:\n")
-        f.write(cls_report)
+    # ============================================================
+    # Classification Report
+    # ============================================================
+    cls = classification_report(y_test, y_pred)
+
+    with open("classification_report.txt", "w") as f:
+        f.write(cls)
 
     mlflow.log_artifact("classification_report.txt")
     os.remove("classification_report.txt")
+
+print("\n✅ MLflow Logging Completed Successfully\n")

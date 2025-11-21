@@ -5,7 +5,7 @@ import pandas as pd
 import os
 
 app = Flask(__name__)
-CORS(app)  # ✅ السماح بالاتصال من أي موقع (Vercel مثلاً)
+CORS(app)
 
 # ✅ تحميل الموديل من المجلد الصحيح
 MODEL_PATH = os.path.join(os.path.dirname(__file__), "model", "model.pkl")
@@ -14,8 +14,8 @@ model = joblib.load(MODEL_PATH)
 @app.route("/")
 def home():
     return jsonify({
-        "message": "✅ MLflow Heart Disease Prediction API is running successfully!",
-        "usage": "Send POST request to /predict with full JSON feature names."
+        "message": "✅ Heart Disease Prediction API is running!",
+        "usage": "Send POST request to /predict with input JSON features."
     })
 
 @app.route("/predict", methods=["POST"])
@@ -23,14 +23,14 @@ def predict():
     try:
         data = request.get_json()
 
-        # ✅ تحويل البيانات إلى DataFrame
+        # تحويل البيانات إلى DataFrame
         df = pd.DataFrame([data])
 
-        # ✅ إضافة العمود المفقود Unnamed: 0 إذا لم يكن موجودًا
+        # إضافة العمود المفقود إذا غير موجود
         if "Unnamed: 0" not in df.columns:
             df["Unnamed: 0"] = 0
 
-        # ✅ ترتيب الأعمدة لتطابق التدريب
+        # ترتيب الأعمدة بنفس ترتيب التدريب
         expected_features = [
             'Unnamed: 0', 'BMI', 'Smoking', 'AlcoholDrinking', 'Stroke',
             'PhysicalHealth', 'MentalHealth', 'DiffWalking', 'Sex',
@@ -41,15 +41,15 @@ def predict():
             'Diabetic_Yes (during pregnancy)'
         ]
 
-        # ✅ ملء القيم المفقودة بـ 0 لتجنب NaN errors
+        # ملء القيم الناقصة بـ 0
         df = df.reindex(columns=expected_features, fill_value=0)
 
-        # ✅ التنبؤ
+        # التنبؤ
         prediction = model.predict(df)[0]
 
         return jsonify({
             "prediction": int(prediction),
-            "message": "✅ Prediction successful!"
+            "message": "Prediction successful!"
         })
 
     except Exception as e:
@@ -57,5 +57,4 @@ def predict():
 
 
 if __name__ == "__main__":
-    # ✅ عند التشغيل المحلي
     app.run(host="0.0.0.0", port=5000)
