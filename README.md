@@ -1,4 +1,4 @@
-![alt image](WhatsApp Image 2025-10-31 at 14.27.25_06aa0552.jpg)
+![alt image]()
 Project Description: 
 Our project is about Medical field especially (Heart Disease Detection). The Heart Disease Detection project aims to develop a machine learning model capable of predicting the likelihood of heart disease in patients based on clinical and lifestyle data. The system will help healthcare professionals identify high-risk individuals early, enabling timely intervention and improved patient outcomes.
 
