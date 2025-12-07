@@ -12,7 +12,7 @@ Fatema Taher__preprocessing phase (Milestone1) && Report && Computer Vision (Pre
 -------
 Raghad Hamdy-Modeling and evaluation phase (Milestone 3)
 -------
-Heba Adel--optimization in phase (Milestone 3)+presentation
+Heba Adel--optimization in phase (Milestone 3)+presentation+ Visualization
 -----
 Abdulrahman Ibrahim -__Deployment&&Monitoring(Mlops) (Milestone 4)
 -------
